@@ -1,0 +1,27 @@
+{
+  "name": "minor2",
+  "version": "1.0.0",
+  "description": "\"# co-edit\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shubhamgoyal49/co-edit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shubhamgoyal49/co-edit/issues"
+  },
+  "homepage": "https://github.com/shubhamgoyal49/co-edit#readme",
+  "dependencies": {
+    "codemirror": "^5.25.2",
+    "express": "^4.15.2",
+    "http": "0.0.0",
+    "jquery": "^3.2.1",
+    "rethinkdb": "^2.3.3",
+    "socket.io": "^1.7.3"
+  }
+}
