@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Collaborative Editor</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+          height: 100%;
+          width: 100%;
+          background-color:#333;
+          font: 13px Helvetica, Arial;
+      }
+      #editor-wrapper {
+          width: 70%;
+          margin-left:auto;
+          margin-right:auto;
+          margin-top:3em;
+      }
+      #username {
+          color: #f3f3f3;
+      }
+      .cuser {
+          color: #999;
+      }
+      .ouser {
+          color: #fff;
+      }
+      form { position: absolute;bottom: 0;border: 2px black solid;width:100%;}
+      form input { border: 0; padding: 10px;width: 90%}
+      form button {background: rgb(130, 224, 255); border: none; padding: 10px;width:10%;}
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+      <div id="editor-wrapper" style="float:left;width: 500px;height: 500px;margin:50px;">
+        <span class="cuser">Current User: </span><span id="username"></span><br>
+        <textarea id="editor"></textarea>    
+      </div>
+      <div id="chat-wrapper" style="float:right; width: 420px;height: 400px;position: relative;margin: 65px;background: #fff">
+        <ul id="messages"></ul>
+        <form action="">
+          <input id="m" autocomplete="off" /><button>Send</button>
+        </form>
+      </div>
+    <script src="/bower_components/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="/bower_components/codemirror/lib/codemirror.css">
+    <script src="/bower_components/codemirror/mode/javascript/javascript.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+     <script>
+  $(function () {
+    var user = getParameterByName('user');
+    var socket = io();
+
+    socket.emit('connection', user);
+    socket.emit('private-msg', user);
+
+    $('form').submit(function(){
+       var msg = {
+                user: user,
+                value: $('#m').val()
+            }
+      socket.emit('chat message',msg);
+      $('#m').val('');
+      return false;
+    });
+
+    socket.on('chat message', function(msg){
+      $('#messages').append($('<li>').text(msg));
+    });
+
+  });
+
+</script>
+    <script>
+    
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+        var room = getParameterByName('room');
+        var user = getParameterByName('user');
+        document.getElementById("username").innerHTML = user;
+        
+        var myCodeMirror = CodeMirror.fromTextArea(document.getElementById("editor"), {
+            lineNumbers: true,
+            mode: "javascript"
+        });
+        myCodeMirror.setSize(600, 500);
+        var socket = io();
+        
+        $.ajax({
+            url: '/getData/' + room,
+            success: function(result, status, xhr) {
+                myCodeMirror.setValue(result.value);
+                console.log(result);
+            }
+        });
+        
+        myCodeMirror.on('keyup', function () {
+            var msg = {
+                id: room,
+                user: user,
+                value: myCodeMirror.getValue()
+            }
+            socket.emit('document-update',msg);
+        });
+      
+        socket.on('doc', function(msg){
+            if(msg.new_val.id === room && msg.new_val.user != user) {
+                var current_pos = myCodeMirror.getCursor();
+                myCodeMirror.getDoc().setValue(msg.new_val.value);
+                myCodeMirror.setCursor(current_pos);    
+                console.log(msg);
+            }
+        });
+      
+    </script>
+  </body>
+</html>
